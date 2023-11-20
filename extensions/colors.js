@@ -184,45 +184,40 @@ function colorPositiveNegative(app) {
  * Colors
  */
 let afterChange;
-function setColorMode(value, app) {
-  switch (value) {
+let colorModeValue;
+function invokeAfterChange() {
+  switch (colorModeValue) {
     case 1:
-      app.graph.afterChange = function () {
-        uncolor(app);
-        if (getPosNegValue()) {
-          colorPositiveNegative(app);
-        }
-        return afterChange?.apply(this, arguments);
-      };
       uncolor(app);
       break;
     case 2:
-      app.graph.afterChange = function () {
-        rainbowify(app);
-        if (getPosNegValue()) {
-          colorPositiveNegative(app);
-        }
-        return afterChange?.apply(this, arguments);
-      };
       rainbowify(app);
       break;
     case 3:
-      app.graph.afterChange = function () {
-        colorByType(app);
-        if (getPosNegValue()) {
-          colorPositiveNegative(app);
-        }
-        return afterChange?.apply(this, arguments);
-      };
       colorByType(app);
       break;
     default:
-      app.graph.afterChange = function () {
-        if (getPosNegValue()) {
-          colorPositiveNegative(app);
-        }
-        return afterChange?.apply(this, arguments);
-      };
+      break;
+  }
+  if (getPosNegValue()) {
+    colorPositiveNegative(app);
+  }
+  return afterChange?.apply(this, arguments);
+}
+
+function setColorMode(value, app) {
+  colorModeValue = value;
+  switch (value) {
+    case 1:
+      uncolor(app);
+      break;
+    case 2:
+      rainbowify(app);
+      break;
+    case 3:
+      colorByType(app);
+      break;
+    default:
       app.graph._nodes.forEach((node) => {
         node.bgcolor = node._bgcolor ?? node.bgcolor;
         node.color = node._color ?? node.color;
@@ -275,6 +270,7 @@ app.registerExtension({
   },
   async init(app) {
     afterChange = app.graph.afterChange;
+    app.graph.afterChange = invokeAfterChange;
     const onMenuNodeColors = LGraphCanvas.onMenuNodeColors;
     LGraphCanvas.onMenuNodeColors = function (value, options, e, menu, node) {
       const response = onMenuNodeColors.apply(this, arguments);
